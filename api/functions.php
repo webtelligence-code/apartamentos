@@ -14,14 +14,14 @@ function getUsername()
 }
 
 /**
- * Function to fetch all meetings from database
- * We need to join the salas table to reunioes table
+ * Function to fetch all apartments from database
+ * We need to join the salas table to apartments table
  * @return void 
  */
 function getApartments()
 {
     global $conn;
-    $sql = 'SELECT a_apartments.id, a_apartments.name, a_apartments.start_date, a_apartments.end_date, a_apartments.check_in, a_apartments.check_out, a_apartments.host,
+    $sql = 'SELECT a_apartments.id, a_apartments.name, a_apartments.start_date, a_apartments.end_date, a_apartments.check_in, a_apartments.check_out, a_apartments.host, a_apartments.key_host,
             (
                 SELECT GROUP_CONCAT(a_guests.name SEPARATOR \', \')
                 FROM a_guests
@@ -63,8 +63,8 @@ function addApartment($apartment)
 {
     global $conn;
 
-    $apartmentsSql = 'INSERT INTO a_apartments (name, start_date, end_date, check_in, check_out, host)
-                    VALUES (:name, :start_date, :end_date, :check_in, :check_out, :host)';
+    $apartmentsSql = 'INSERT INTO a_apartments (name, start_date, end_date, check_in, check_out, host, key_host)
+                    VALUES (:name, :start_date, :end_date, :check_in, :check_out, :host, :key_host)';
     // Add the meeting to the reunioes table
     $stmt = $conn->prepare($apartmentsSql);
     $stmt->bindParam(':name', $apartment['name']);
@@ -73,6 +73,7 @@ function addApartment($apartment)
     $stmt->bindParam(':check_in', $apartment['check_in']);
     $stmt->bindParam(':check_out', $apartment['check_out']);
     $stmt->bindParam(':host', $apartment['host']);
+    $stmt->bindParam(':key_host', $apartment['key_host']);
     $stmt->execute();
 
     // Get the id of the inserted meeting
@@ -90,7 +91,7 @@ function addApartment($apartment)
 
     return [
         'status' => 'success',
-        'message' => 'Reunião adicionada com sucesso!',
+        'message' => 'Apartamento adicionado com sucesso!',
         'title' => 'Sucesso!'
     ];
 }

@@ -45,22 +45,7 @@ const handleDOMFormData = () => {
     getUsers();
 
     if (selectedApartment) {
-        document.getElementById('motivo').value = selectedApartment.motivo;
-        document.getElementById('data').value = selectedApartment.data;
-        document.getElementById('hora_inicio').value = selectedApartment.hora_inicio;
-
-        const startTime = new Date(`${selectedApartment.data}T${selectedApartment.hora_inicio}`);
-        const endTime = new Date(`${selectedApartment.data}T${selectedApartment.hora_fim}`);
-        const duration = (endTime - startTime) / 60000 // Duration in minutes
-
-        // Set the duration to the dropdown
-        const durationSelect = document.getElementById('duration');
-        for (let i = 0; i < durationSelect.options.length; i++) {
-            if (parseInt(durationSelect.options[i].value) === duration) {
-                durationSelect.selectedIndex = i;
-                break;
-            }
-        }
+        document.getElementById('motivo').value = selectedApartment.name;
     }
 }
 
@@ -81,8 +66,8 @@ const getUsers = async () => {
  * @param {array object} users 
  */
 const populateUsers = (users) => {
-    const usersSelect = document.getElementById('users');
-    const keyHostSelect = document.getElementById('key-host');
+    const guestsSelect = document.getElementById('guests');
+    const keyHostSelect = document.getElementById('key_host');
     console.log(users);
     users.map((user) => {
         var option1 = document.createElement('option');
@@ -97,7 +82,7 @@ const populateUsers = (users) => {
             }
         }
 
-        usersSelect.appendChild(option1) // Append option to select
+        guestsSelect.appendChild(option1) // Append option to select
 
         var option2 = document.createElement('option');
         option2.innerText = user.NAME;
@@ -107,7 +92,7 @@ const populateUsers = (users) => {
     });
 
     // Initialize Select2
-    $('#users').select2({
+    $('#guests').select2({
         theme: "bootstrap-5",
         width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
         placeholder: $(this).data('placeholder'),
@@ -121,23 +106,19 @@ const submitApartment = async (e) => {
     e.preventDefault();
 
     // Get the form data
-    const id_reuniao = selectedMeeting ? selectedMeeting.id : null;
-    const motivo = document.getElementById('motivo').value;
-    const data = document.getElementById('data').value;
-    const hora_inicio = document.getElementById('hora_inicio').value;
-    const duration = parseInt(document.getElementById('duration').value);
-    const sala = document.getElementById('sala').value;
-    const participantes = $('#users').val();
+    const apartment_id = selectedApartment ? selectedApartment.id : null;
+    const name = document.getElementById('name').value;
+    const start_date = document.getElementById('start_date').value;
+    const end_date = document.getElementById('end_date').value;
+    const check_in = parseInt(document.getElementById('check_in').value);
+    const check_out = document.getElementById('check_out').value;
+    const guests = $('#guests').val();
+    const key_host = document.getElementById('key_host').value;
 
-    // Calculate hora_fim
-    const startTime = new Date(`${data}T${hora_inicio}`);
-    const [hours, minutes] = startTime.toISOString().substr(11, 5).split(':');
-    let endTimeHours = parseInt(hours) + Math.floor((parseInt(minutes) + duration) / 60) + Math.floor(duration / 60);
-    let endTimeMinutes = (parseInt(minutes) + duration) % 60;
-    const hora_fim = `${endTimeHours.toString().padStart(2, '0')}:${endTimeMinutes.toString().padStart(2, '0')}`;
+    // Prepare the apartment object
+    const apartment = { apartment_id, name, start_date, end_date, check_in, check_out, host, key_host, guests };
 
-    // Prepare the meeting object
-    const apartment = { id_reuniao, motivo, data, hora_inicio, hora_fim, organizador, sala, participantes };
+    console.log(apartment)
 
     if (selectedApartment) {
         updateApartment(apartment) // Update the meeting

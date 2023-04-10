@@ -130,7 +130,7 @@ const gotToAddEditApartmentPage = (apartment) => {
     } else {
         localStorage.removeItem('selectedApartment'); // Remove localStorage object set if meeting object is null
     }
-    localStorage.setItem('organizador', JSON.stringify(sessionUsername));
+    localStorage.setItem('host', JSON.stringify(sessionUsername));
     window.location.href = 'addEditApartment.html'; // Navigate to add/edit department
 }
 
