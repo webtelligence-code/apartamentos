@@ -18,41 +18,27 @@ function getUsername()
  * We need to join the salas table to reunioes table
  * @return void 
  */
-function getMeetings()
+function getApartments()
 {
     global $conn;
-    $sql = 'SELECT reunioes.id, reunioes.motivo, reunioes.data, reunioes.hora_inicio, reunioes.hora_fim, reunioes.organizador, salas.nome 
-            AS sala, salas.url_imagem,
+    $sql = 'SELECT a_apartments.id, a_apartments.name, a_apartments.start_date, a_apartments.end_date, a_apartments.check_in, a_apartments.check_out, a_apartments.host,
             (
-                SELECT GROUP_CONCAT(participantes.nome_participante SEPARATOR \', \')
-                FROM participantes
-                WHERE participantes.id_reuniao = reunioes.id
-            ) AS participantes
-            FROM reunioes
-            JOIN salas ON reunioes.id_sala = salas.id
-            ORDER BY reunioes.data DESC, reunioes.hora_inicio ASC
+                SELECT GROUP_CONCAT(a_guests.name SEPARATOR \', \')
+                FROM a_guests
+                WHERE a_guests.apartment_id = a_apartments.id
+            ) AS a_guests
+            FROM a_apartments
+            ORDER BY a_apartments.start_date DESC, a_apartments.check_in ASC
     ';
     $stmt = $conn->prepare($sql);
     $stmt->execute();
-    $meetings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $apartments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    foreach ($meetings as $key => $meeting) {
-        $meetings[$key]['participantes'] = explode(',', $meeting['participantes']);
+    foreach ($apartments as $key => $apartment) {
+        $apartments[$key]['guests'] = explode(',', $apartment['guests']);
     }
 
-    return $meetings;
-}
-
-// Function that will fetch all rooms available in the database
-function getRooms()
-{
-    global $conn;
-    $sql = 'SELECT * FROM salas';
-    $stmt = $conn->prepare($sql);
-    $stmt->execute();
-    $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    return $rooms;
+    return $apartments;
 }
 
 // Function that will fetch all users (guests) from the database
@@ -67,67 +53,38 @@ function getUsers()
     return $users;
 }
 
-function checkMeetingConflict($id_sala, $data, $hora_inicio, $hora_fim, $id_reuniao)
-{
-    global $conn;
-
-    $sql = 'SELECT * FROM reunioes
-            WHERE id_sala = :id_sala
-            AND data = :data
-            AND ((:hora_inicio >= hora_inicio AND :hora_inicio < hora_fim) OR (hora_inicio >= :hora_inicio AND hora_inicio < :hora_fim))';
-
-    if ($id_reuniao) {
-        $sql .= ' AND id != :id_reuniao';
-    }
-
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':id_sala', $id_sala);
-    $stmt->bindParam(':data', $data);
-    $stmt->bindParam(':hora_inicio', $hora_inicio);
-    $stmt->bindParam(':hora_fim', $hora_fim);
-
-    if ($id_reuniao) {
-        $stmt->bindParam(':id_reuniao', $id_reuniao);
-    }
-
-    $stmt->execute();
-    $meetings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    return count($meetings) > 0;
-}
-
 /**
- * Function that will handle insert a new meeting into the database
- * @param mixed $meeting 
+ * Function that will handle insert a new apartment into the database
+ * @param mixed $apartment 
  * @return void 
  * @throws PDOException 
  */
-function addMeeting($meeting)
+function addApartment($apartment)
 {
     global $conn;
 
-    $meetingsSql = 'INSERT INTO reunioes (motivo, data, hora_inicio, hora_fim, organizador, id_sala)
-                    VALUES (:motivo, :data, :hora_inicio, :hora_fim, :organizador, :sala)';
+    $apartmentsSql = 'INSERT INTO a_apartments (name, start_date, end_date, check_in, check_out, host)
+                    VALUES (:name, :start_date, :end_date, :check_in, :check_out, :host)';
     // Add the meeting to the reunioes table
-    $stmt = $conn->prepare($meetingsSql);
-    $stmt->bindParam(':motivo', $meeting['motivo']);
-    $stmt->bindParam(':data', $meeting['data']);
-    $stmt->bindParam(':hora_inicio', $meeting['hora_inicio']);
-    $stmt->bindParam(':hora_fim', $meeting['hora_fim']);
-    $stmt->bindParam(':organizador', $meeting['organizador']);
-    $stmt->bindParam(':sala', $meeting['sala']);
+    $stmt = $conn->prepare($apartmentsSql);
+    $stmt->bindParam(':name', $apartment['name']);
+    $stmt->bindParam(':start_date', $apartment['start_date']);
+    $stmt->bindParam(':end_date', $apartment['end_date']);
+    $stmt->bindParam(':check_in', $apartment['check_in']);
+    $stmt->bindParam(':check_out', $apartment['check_out']);
+    $stmt->bindParam(':host', $apartment['host']);
     $stmt->execute();
 
     // Get the id of the inserted meeting
-    $meeting_id = $conn->lastInsertId();
+    $apartment_id = $conn->lastInsertId();
 
-    $guestsSql = 'INSERT INTO participantes (id_reuniao, nome_participante)
-                    VALUES (:id_reuniao, :nome_participante)';
+    $guestsSql = 'INSERT INTO a_guests (apartment_id, name)
+                    VALUES (:apartment_id, :name)';
     // Add the guests to the participantes table
-    foreach ($meeting['participantes'] as $participante) {
+    foreach ($apartment['guests'] as $guest) {
         $stmt = $conn->prepare($guestsSql);
-        $stmt->bindParam(':id_reuniao', $meeting_id);
-        $stmt->bindParam(':nome_participante', $participante);
+        $stmt->bindParam(':apartment_id', $apartment_id);
+        $stmt->bindParam(':name', $guest);
         $stmt->execute();
     }
 
@@ -139,60 +96,60 @@ function addMeeting($meeting)
 }
 
 /**
- * This function will update the meeting in the database
- * @param object $meeting 
+ * This function will update the apartment in the database
+ * @param object $apartment 
  * @return string[] response array
  * @throws PDOException 
  */
-function updateMeeting($meeting)
+function updateApartment($apartment)
 {
     global $conn;
 
-    $meetingSql = 'UPDATE reunioes 
-                    SET motivo = :motivo, data = :data, hora_inicio = :hora_inicio, hora_fim = :hora_fim, organizador = :organizador, id_sala = :sala 
+    $apartmentSql = 'UPDATE a_apartments 
+                    SET name = :name, start_date = :start_date, end_date = :end_date, check_in = :check_in, check_out = :check_out, host = :host
                     WHERE id = :id';
     // Update the meeting in the reunioes table
-    $stmt = $conn->prepare($meetingSql);
-    $stmt->bindParam(':motivo', $meeting['motivo']);
-    $stmt->bindParam(':data', $meeting['data']);
-    $stmt->bindParam(':hora_inicio', $meeting['hora_inicio']);
-    $stmt->bindParam(':hora_fim', $meeting['hora_fim']);
-    $stmt->bindParam(':organizador', $meeting['organizador']);
-    $stmt->bindParam(':sala', $meeting['sala']);
-    $stmt->bindParam(':id', $meeting['meeting_id']);
+    $stmt = $conn->prepare($apartmentSql);
+    $stmt->bindParam(':name', $apartment['name']);
+    $stmt->bindParam(':start_date', $apartment['start_date']);
+    $stmt->bindParam(':end_date', $apartment['end_date']);
+    $stmt->bindParam(':check_in', $apartment['check_in']);
+    $stmt->bindParam(':check_out', $apartment['check_out']);
+    $stmt->bindParam(':host', $apartment['host']);
+    $stmt->bindParam(':id', $apartment['apartment_id']);
     $stmt->execute();
 
-    $deleteGuestsSql = 'DELETE FROM participantes WHERE id_reuniao = :id_reuniao';
+    $deleteGuestsSql = 'DELETE FROM a_guests WHERE apartment_id = :apartment_id';
     // Delete the existing guests in the guests table
     $stmt = $conn->prepare($deleteGuestsSql);
-    $stmt->bindParam(':id_reuniao', $meeting['meeting_id']);
+    $stmt->bindParam(':apartment_id', $apartment['apartment_id']);
     $stmt->execute();
 
-    $updateGuestsSql = 'INSERT INTO participantes (id_reuniao, nome_participante) 
-                        VALUES (:id_reuniao, :nome_participante)';
+    $updateGuestsSql = 'INSERT INTO a_guests (apartment_id, name) 
+                        VALUES (:apartment_id, :name)';
     // Add the updated guests to the guests table
-    foreach ($meeting['participantes'] as $participante) {
+    foreach ($apartment['guests'] as $guest) {
         $stmt = $conn->prepare($updateGuestsSql);
-        $stmt->bindParam(':id_reuniao', $meeting['meeting_id']);
-        $stmt->bindParam(':nome_participante', $participante);
+        $stmt->bindParam(':apartment_id', $apartment['apartment_id']);
+        $stmt->bindParam(':name', $guest);
         $stmt->execute();
     }
 
     return [
         'status' => 'success',
-        'message' => 'Reunião atualizada com sucesso!',
-        'title' => 'Atualizada!'
+        'message' => 'Apartamento atualizado com sucesso!',
+        'title' => 'Atualizado!'
     ];
 }
 
 /**
- * This function will handle a transaction to delete meeting in reunioes table
- * and also delete all the participantes associated to the meeting in question
- * @param object $meeting_id 
+ * This function will handle a transaction to delete apartment in apartments table
+ * and also delete all the guests associated to the apartment in question
+ * @param int $apartment_id 
  * @return bool|void 
  * @throws PDOException 
  */
-function deleteMeeting($meeting_id)
+function deleteApartment($apartment_id)
 {
     global $conn;
 
@@ -201,15 +158,15 @@ function deleteMeeting($meeting_id)
         $conn->beginTransaction();
 
         // Delete the associated guests
-        $guestsSql = 'DELETE FROM participantes WHERE id_reuniao = :meeting_id';
+        $guestsSql = 'DELETE FROM a_guests WHERE apartment_id = :apartment_id';
         $stmt = $conn->prepare($guestsSql);
-        $stmt->bindParam(':meeting_id', $meeting_id, PDO::PARAM_INT);
+        $stmt->bindParam(':apartment_id', $apartment_id, PDO::PARAM_INT);
         $stmt->execute();
 
         // Delete the meeting
-        $meetingsSql = 'DELETE FROM reunioes WHERE ID = :meeting_id';
+        $meetingsSql = 'DELETE FROM a_apartments WHERE id = :apartment_id';
         $stmt = $conn->prepare($meetingsSql);
-        $stmt->bindParam(':meeting_id', $meeting_id, PDO::PARAM_INT);
+        $stmt->bindParam(':apartment_id', $apartment_id, PDO::PARAM_INT);
         $result = $stmt->execute();
 
         // Commit the transaction
@@ -218,13 +175,13 @@ function deleteMeeting($meeting_id)
         if ($result) {
             $response = [
                 'status' => 'success',
-                'message' => 'Reunião removida com sucesso!',
-                'title' => 'Removida!'
+                'message' => 'Apartamento removido com sucesso!',
+                'title' => 'Removido!'
             ];
         } else {
             $response = [
                 'status' => 'error',
-                'message' => 'Erro ao remover reunião da base de dados.',
+                'message' => 'Erro ao remover apartamento da base de dados.',
                 'title' => 'Erro ao remover.'
             ];
         }
@@ -233,6 +190,6 @@ function deleteMeeting($meeting_id)
     } catch (PDOException $e) {
         // Rollback the transaction if there is an error
         $conn->rollBack();
-        error_log('Error while deleting meeting: ' . $e->getMessage());
+        error_log('Error while deleting Apartment: ' . $e->getMessage());
     }
 }

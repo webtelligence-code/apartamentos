@@ -3,7 +3,7 @@
     border-color: #ed6337;
 }
 
-.add-edit-meeting-btn {
+.add-edit-apartment-btn {
     border-radius: 15px;
     background-color: #ed6337;
     padding: 8px;
@@ -11,7 +11,7 @@
     border: none;
 }
 
-.add-edit-meeting-btn:hover {
+.add-edit-apartment-btn:hover {
     background-color: #f84e15;
 }
 

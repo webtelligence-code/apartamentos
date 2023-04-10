@@ -17,23 +17,11 @@ switch ($method) {
             case 'get_username':
                 $response = getUsername();
                 break;
-            case 'get_meetings';
-                $response = getMeetings();
-                break;
-            case 'get_rooms':
-                $response = getRooms();
+            case 'get_apartments';
+                $response = getApartments();
                 break;
             case 'get_users':
                 $response = getUsers();
-                break;
-            case 'check_meeting_conflict':
-                $id_sala = isset($_GET['id_sala']) ? $_GET['id_sala'] : '';
-                $data = isset($_GET['data']) ? $_GET['data'] : '';
-                $hora_inicio = isset($_GET['hora_inicio']) ? $_GET['hora_inicio'] : '';
-                $hora_fim = isset($_GET['hora_fim']) ? $_GET['hora_fim'] : '';
-                $id_reuniao = isset($_GET['id_reuniao']) ? $_GET['id_reuniao'] : '';
-
-                $response = checkMeetingConflict($id_sala, $data, $hora_inicio, $hora_fim, $id_reuniao);
                 break;
         }
 
@@ -46,13 +34,13 @@ switch ($method) {
         $response = null;
 
         switch ($post_action) {
-            case 'add_meeting':
-                $meeting = json_decode($_POST['meeting'], true);
-                $response = addMeeting($meeting);
+            case 'add_apartment':
+                $apartment = json_decode($_POST['apartment'], true);
+                $response = addApartment($apartment);
                 break;
-            case 'update_meeting':
-                $meeting = json_decode($_POST['meeting'], true);
-                $response = updateMeeting($meeting);
+            case 'update_apartment':
+                $apartment = json_decode($_POST['apartment'], true);
+                $response = updateApartment($apartment);
                 break;
         }
 
@@ -65,14 +53,14 @@ switch ($method) {
         $delete_action = isset($_DELETE['action']) ? $_DELETE['action'] : '';
 
         switch ($delete_action) {
-            case 'delete_meeting':
-                $meeting_id = isset($_DELETE['meeting_id']) ? $_DELETE['meeting_id'] : '';
-                if ($meeting_id) {
-                    $response = deleteMeeting($meeting_id);
+            case 'delete_apartment':
+                $apartment_id = isset($_DELETE['apartment_id']) ? $_DELETE['apartment_id'] : '';
+                if ($apartment_id) {
+                    $response = deleteApartment($apartment_id);
                 } else {
                     $response = [
                         'status' => 'error',
-                        'message' => 'É necessário o id da reunião.',
+                        'message' => 'É necessário o id do apartamento.',
                         'title' => 'ID em falta.'
                     ];
                 }

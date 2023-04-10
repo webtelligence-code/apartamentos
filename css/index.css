@@ -9,7 +9,7 @@
     cursor: pointer;
 }
 
-.add-meeting-btn {
+.add-apartment-btn {
     border-radius: 15px;
     background-color: #ed6337;
     color: white;
@@ -18,7 +18,7 @@
     justify-content: center;
 }
 
-.add-meeting-btn:hover {
+.add-apartment-btn:hover {
     background-color: #f84e15;
 }
 
@@ -34,7 +34,7 @@
     border: #ed6337 1px solid;
 }
 
-.meeting-image {
+.apartment-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
