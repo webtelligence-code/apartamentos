@@ -13,6 +13,11 @@ function getUsername()
     return $_SESSION['USERNAME'];
 }
 
+// Function that will fetch departamento value for the current user
+function getDepartment() {
+    return $_SESSION['DEPARTAMENTO'];
+}
+
 /**
  * Function to fetch all apartments from database
  * We need to join the salas table to apartments table
@@ -28,14 +33,14 @@ function getApartments()
                 WHERE a_guests.apartment_id = a_apartments.id
             ) AS a_guests
             FROM a_apartments
-            ORDER BY a_apartments.start_date DESC, a_apartments.check_in ASC
+            ORDER BY a_apartments.start_date DESC, a_apartments.check_in DESC
     ';
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $apartments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($apartments as $key => $apartment) {
-        $apartments[$key]['guests'] = explode(',', $apartment['guests']);
+        $apartments[$key]['a_guests'] = explode(',', $apartment['a_guests']);
     }
 
     return $apartments;
@@ -53,6 +58,37 @@ function getUsers()
     return $users;
 }
 
+function checkApartmentConflict($apartment_id, $start_date, $end_date, $check_in, $check_out)
+{
+    global $conn;
+
+    $sql = 'SELECT * FROM a_apartments
+            WHERE start_date <= :end_date
+            AND end_date >= :start_date
+            AND check_in <= :check_out
+            AND check_out >= :check_in
+        ';
+
+    if ($apartment_id) {
+        $sql .= ' AND id != :apartment_id';
+    }
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':start_date', $start_date);
+    $stmt->bindParam(':end_date', $end_date);
+    $stmt->bindParam(':check_in', $check_in);
+    $stmt->bindParam(':check_out', $check_out);
+
+    if ($apartment_id) {
+        $stmt->bindParam(':apartment_id', $apartment_id);
+    }
+
+    $stmt->execute();
+    $apartments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    return count($apartments) > 0;
+}
+
 /**
  * Function that will handle insert a new apartment into the database
  * @param mixed $apartment 
@@ -63,10 +99,11 @@ function addApartment($apartment)
 {
     global $conn;
 
-    $apartmentsSql = 'INSERT INTO a_apartments (name, start_date, end_date, check_in, check_out, host, key_host)
-                    VALUES (:name, :start_date, :end_date, :check_in, :check_out, :host, :key_host)';
+    $apartmentsSql = 'INSERT INTO a_apartments (id, name, start_date, end_date, check_in, check_out, host, key_host)
+                    VALUES (:id, :name, :start_date, :end_date, :check_in, :check_out, :host, :key_host)';
     // Add the meeting to the reunioes table
     $stmt = $conn->prepare($apartmentsSql);
+    $stmt->bindParam(':id', $apartment['apartment_id']);
     $stmt->bindParam(':name', $apartment['name']);
     $stmt->bindParam(':start_date', $apartment['start_date']);
     $stmt->bindParam(':end_date', $apartment['end_date']);

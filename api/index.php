@@ -17,11 +17,23 @@ switch ($method) {
             case 'get_username':
                 $response = getUsername();
                 break;
+            case 'get_department':
+                $response = getDepartment();
+                break;
             case 'get_apartments';
                 $response = getApartments();
                 break;
             case 'get_users':
                 $response = getUsers();
+                break;
+            case 'check_apartment_conflict':
+                $apartment_id = isset($_GET['apartment_id']) ? $_GET['apartment_id'] : '';
+                $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : '';
+                $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : '';
+                $check_in = isset($_GET['check_in']) ? $_GET['check_in'] : '';
+                $check_out = isset($_GET['check_out']) ? $_GET['check_out'] : '';
+
+                $response = checkApartmentConflict($apartment_id, $start_date, $end_date, $check_in, $check_out);
                 break;
         }
 

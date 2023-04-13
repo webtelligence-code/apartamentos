@@ -44,8 +44,13 @@ const handleDOMFormData = () => {
 
     getUsers();
 
+    // Set default values if selectedApartment is selected
     if (selectedApartment) {
-        document.getElementById('motivo').value = selectedApartment.name;
+        document.getElementById('name').value = selectedApartment.name;
+        document.getElementById('start_date').value = selectedApartment.start_date
+        document.getElementById('end_date').value = selectedApartment.end_date
+        document.getElementById('check_in').value = selectedApartment.check_in
+        document.getElementById('check_out').value = selectedApartment.check_out
     }
 }
 
@@ -76,9 +81,9 @@ const populateUsers = (users) => {
 
         // Check if the user is in the selectedGuests array and set the selected attribute
         if (selectedApartment) {
-            const trimmedParticipants = selectedApartment.participantes.map(participant => participant.trim());
+            const trimmedParticipants = selectedApartment.a_guests.map(guest => guest.trim());
             if (trimmedParticipants.includes(user.NAME.trim())) {
-                option1.selected = true;
+                option1.selected = true; // Set guests default value
             }
         }
 
@@ -90,6 +95,14 @@ const populateUsers = (users) => {
 
         keyHostSelect.appendChild(option2);
     });
+
+    // Set default value for keyHostSelected
+    if (selectedApartment && selectedApartment.key_host) {
+        const keyHostOption = keyHostSelect.querySelector(`option[value='${selectedApartment.key_host}']`);
+        if (keyHostOption) {
+            keyHostOption.selected = true // Set default value for key host option
+        }
+    }
 
     // Initialize Select2
     $('#guests').select2({
@@ -110,7 +123,7 @@ const submitApartment = async (e) => {
     const name = document.getElementById('name').value;
     const start_date = document.getElementById('start_date').value;
     const end_date = document.getElementById('end_date').value;
-    const check_in = parseInt(document.getElementById('check_in').value);
+    const check_in = document.getElementById('check_in').value;
     const check_out = document.getElementById('check_out').value;
     const guests = $('#guests').val();
     const key_host = document.getElementById('key_host').value;
@@ -120,23 +133,58 @@ const submitApartment = async (e) => {
 
     console.log(apartment)
 
-    if (selectedApartment) {
-        updateApartment(apartment) // Update the meeting
+    const conflict = await checkApartmentConflict(apartment_id, start_date, end_date, check_in, check_out);
+
+    console.log('Conflict:', conflict)
+    if (conflict === 'true') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Conflicto!',
+            text: `Já existe um apartamento agendado para ${start_date} - ${end_date} à hora que selecionou. Por favor selecione outra data/hora.`,
+        });
     } else {
-        addApartment(apartment); // Add new meeting
+        if (selectedApartment) {
+            updateApartment(apartment) // Update the meeting
+        } else {
+            addApartment(apartment); // Add new meeting
+        }
     }
+}
+
+/**
+ * This function will make an api call to check in the database for booked apartments
+ * in the range of the selected apartment dates and times
+ * @param {int} apartment_id 
+ * @param {date} start_date 
+ * @param {date} end_date 
+ * @param {time} check_in 
+ * @param {time} check_out 
+ * @returns response data
+ */
+const checkApartmentConflict = async (apartment_id, start_date, end_date, check_in, check_out) => {
+    const response = await $.get('api/index.php', {
+        action: 'check_apartment_conflict',
+        apartment_id,
+        start_date,
+        end_date,
+        check_in,
+        check_out
+    });
+
+    return response;
 }
 
 // Function that will handle the meeting update
 // It will call PHP API to handle update on database
 const updateApartment = async (apartment) => {
-    console.log(apartment)
+    console.log(apartment);
+    apartment = JSON.stringify(apartment);
     $.ajax({
         url: 'api/index.php',
         type: 'POST',
         data: {
             action: 'update_apartment',
-            apartment: JSON.stringify(apartment)
+            apartment
         },
         success: (response) => {
             const parsedResponse = JSON.parse(response);
@@ -151,14 +199,17 @@ const updateApartment = async (apartment) => {
 // Function that will handle add new meeting
 // It will call PHP API to handle insert into database
 const addApartment = async (apartment) => {
+    console.log(apartment);
+    apartment = JSON.stringify(apartment);
     $.ajax({
         url: 'api/index.php',
         type: 'POST',
         data: {
             action: 'add_apartment',
-            apartment: JSON.stringify(apartment)
+            apartment
         },
         success: (response) => {
+            console.log(response);
             const parsedResponse = JSON.parse(response);
             popupSweetAlert(parsedResponse);
         },

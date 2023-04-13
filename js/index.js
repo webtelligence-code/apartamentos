@@ -1,4 +1,5 @@
 let sessionUsername;
+let sessionDepartment;
 // Meetings array
 const apartments = [];
 // Grab the add meeting button id
@@ -11,22 +12,34 @@ const loadingOverlay = document.getElementById('loading-overlay');
 addDepartmentBtn.addEventListener('click', () => gotToAddEditApartmentPage(null));
 
 // This function will get current session username
-const getSessionUsername = () => {
+const getSessionInfo = async () => {
     loadingOverlay.style.display = 'block'; // Show loading overlay
+
+    // To fetch session username
     $.get('api/index.php?action=get_username', (data, status) => {
         if (status === 'success') {
             // API call success
             const parsedData = JSON.parse(data)
             console.log('USERNAME =>', parsedData);
             sessionUsername = parsedData
-            getApartments();
         } else {
             // API call error
             alert('Failed to fetch session username');
         }
     })
+
+    // To fetch Department
+    $.get('api/index.php?action=get_department', (data, status) => {
+        if(status === 'success') {
+            // API call success
+            const parsedData = JSON.parse(data);
+            console.log('DEPARTMENT =>', parsedData);
+            sessionDepartment = parsedData;
+            getApartments();
+        }
+    })
 }
-getSessionUsername(); // Grab the current session USERNAME via ajax call
+getSessionInfo(); // Grab the current session USERNAME/DEPARTAMENTO via ajax call
 
 // Function to call api to fetch all meetings
 const getApartments = () => {
@@ -60,13 +73,14 @@ const populateApartmentsContainer = () => {
         apartments.forEach((apartment, index) => {
             const divRow = document.createElement('div'); // Create div with row class (bootstrap)
 
-            // Condition to verify if session USERNAME matches meeting row 
-            const showEditDeleteButtons = sessionUsername === apartment.organizador;
+            // Condition to verify if session USERNAME/DEPARTAMENTO matches apartment row 
+            const showEditDeleteButtons = sessionUsername === apartment.host || sessionDepartment === 'Informático';
 
             // Formatted date and time
-            const formattedDate = moment(apartment.data).format('DD/MM/YYYY');
-            const formattedHoraInicio = moment(apartment.hora_inicio, 'HH:mm:ss').format('HH:mm');
-            const formattedHoraFim = moment(apartment.hora_fim, 'HH:mm:ss').format('HH:mm');
+            const formattedStartDate = moment(apartment.start_date).format('DD/MM/YYYY');
+            const formattedEndDate = moment(apartment.end_date).format('DD/MM/YYYY');
+            const formattedCheckIn = moment(apartment.check_in, 'HH:mm:ss').format('HH:mm');
+            const formattedCheckOut = moment(apartment.check_out, 'HH:mm:ss').format('HH:mm');
 
             // If true, show edit/delete buttons
             const editDeleteButtons = showEditDeleteButtons ? `
@@ -81,16 +95,23 @@ const populateApartmentsContainer = () => {
                 <div class='card my-3 c-card'>
                     <div class='row g-0 align-items-center'>
                         <div class='col-sm-12 col-md-4 text-center text-md-start'>
-                            <img src='${apartment.url_imagem}' class='img-fluid rounded meeting-image'/>
+                            <img src='assets/img/building.webp' class='img-fluid rounded meeting-image' alt='apartment logo' />
                         </div>
                         <div class='col-sm-12 col-md-8 text-center text-md-start'>
                             <div class='card-body'>
                                 <div class='row align-items-center'>
                                     <div class='col-sm-12 col-md'>
-                                        <h3 class='card-title' style='color: #ed6337'>${apartment.motivo}</h3>
-                                        <p class='card-text'><strong>Data:</strong> ${formattedDate}</p>
-                                        <p class='card-text'><strong>Hora: </strong>${formattedHoraInicio}h - ${formattedHoraFim}h</p>
-                                        <p class='card-text'><strong>Sala:</strong> ${apartment.sala}</p>
+                                        <h3 class='card-title' style='color: #ed6337'>${apartment.name}</h3>
+                                        <p class='card-text'><strong>Data Check In: </strong>${formattedStartDate}</p>
+                                        <p class='card-text'><strong>Data Check Out: </strong>${formattedEndDate}</p>
+                                        <p class='card-text'><strong>Hora Check In: </strong>${formattedCheckIn}h</p>
+                                        <p class='card-text'><strong>Hora Check Out: </strong>${formattedCheckOut}h</p>
+                                        <p class='card-text'><strong>Responsável da chave:</strong> ${apartment.key_host}</p>
+                                        <p class='card-text'>
+                                            <button type='button' class='btn btn-primary' id='btn-guests-${index}'>
+                                                Convidados <span class='badge badge-warning'>${apartment.a_guests.length}</span>
+                                            </button>
+                                        </p>
                                     </div>
                                     ${editDeleteButtons}
                                 </div>
@@ -100,6 +121,10 @@ const populateApartmentsContainer = () => {
                 </div>
             `;
             apartmentsContainer.appendChild(divRow); // Append row HTML to parent container
+
+            const guestsBtn = document.getElementById(`btn-guests-${index}`);
+
+            guestsBtn.addEventListener('click', () => popupSweetAlert(apartment.a_guests))
 
             // Condition to add event listener (if aplicable) for each edit/delete button
             if (showEditDeleteButtons) {
@@ -115,6 +140,33 @@ const populateApartmentsContainer = () => {
     }
 
     loadingOverlay.style.display = 'none'; // Hide loading overlay
+}
+
+const popupSweetAlert = (guests) => {
+    let html = ''
+    guests.map((guest) => {
+        html += `
+            <p>${guest}</p>
+        `
+    });
+
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: 'btn btn-success ms-1',
+            cancelButton: 'btn btn-danger'
+        },
+        buttonsStyling: false
+    })
+
+    swalWithBootstrapButtons.fire({
+        title: 'Convidados',
+        html,
+        icon: 'info',
+        showCancelButton: false,
+        confirmButtonText: 'Ok',
+    }).then((result) => {
+        
+    });
 }
 
 /**
@@ -149,7 +201,7 @@ const alertDelete = (apartment) => {
     })
 
     swalWithBootstrapButtons.fire({
-        title: 'De certeza que quer apagar esta reunião?',
+        title: 'De certeza que quer apagar este apartamento?',
         html: meetingHtml,
         icon: 'warning',
         showCancelButton: true,
@@ -158,7 +210,7 @@ const alertDelete = (apartment) => {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            deleteMeeting(apartment)
+            deleteApartment(apartment)
                 .then(apiResponse => {
                     swalWithBootstrapButtons.fire({
                         title: apiResponse.title,
@@ -176,7 +228,7 @@ const alertDelete = (apartment) => {
         } else if (result.dismiss === Swal.DismissReason.cancel) {
             swalWithBootstrapButtons.fire(
                 'Cancelado',
-                'A tua reunião está segura :)',
+                'O teu apartamento está seguro :)',
                 'error'
             )
         }
@@ -188,7 +240,7 @@ const alertDelete = (apartment) => {
  * @param {object} meeting 
  * @returns promise to handle response
  */
-const deleteMeeting = (apartment) => {
+const deleteApartment = (apartment) => {
     // Return a Promise
     return new Promise((resolve, reject) => {
         // Handle API logic here
@@ -214,15 +266,18 @@ const deleteMeeting = (apartment) => {
 
 const generateApartmentHtml = (apartment) => {
     // Formatted date and time
-    const formattedDate = moment(apartment.data).format('DD/MM/YYYY');
-    const formattedHoraInicio = moment(apartment.hora_inicio, 'HH:mm:ss').format('HH:mm');
-    const formattedHoraFim = moment(apartment.hora_fim, 'HH:mm:ss').format('HH:mm');
+    const formattedStartDate = moment(apartment.start_date).format('DD/MM/YYYY');
+    const formattedEndDate = moment(apartment.end_date).format('DD/MM/YYYY');
+    const formattedCheckIn = moment(apartment.check_in, 'HH:mm:ss').format('HH:mm');
+    const formattedCheckOut = moment(apartment.check_out, 'HH:mm:ss').format('HH:mm');
 
     const html = `
-        <h3 style='color: #ed6337'>${apartment.motivo}</h3>
-        <p><strong>Data:</strong> ${formattedDate}</p>
-        <p><strong>Hora: </strong>${formattedHoraInicio}h - ${formattedHoraFim}h</p>
-        <p><strong>Sala:</strong> ${apartment.sala}</p>
+        <h3 style='color: #ed6337'>${apartment.name}</h3>
+        <p><strong>Data: </strong>${formattedStartDate} - ${formattedEndDate}</p>
+        <p><strong>Check in: </strong>${formattedCheckIn}h</p>
+        <p><strong>Check Out: </strong>${formattedCheckOut}h</p>
+        <p><strong>Organizador: </strong>${apartment.host}</p>
+        <p><strong>Responsável da chave: </strong>${apartment.key_host}</p>
     `;
 
     return html;
