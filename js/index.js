@@ -4,12 +4,14 @@ let sessionDepartment;
 const apartments = [];
 // Grab the add meeting button id
 const addDepartmentBtn = document.getElementById('add-apartment-btn');
+const manualBtn = document.getElementById('manual-btn');
 // Grab root container that will be populated with the meetings
 const apartmentsContainer = document.getElementById('apartments-container');
 // Grab theloading overlay div
 const loadingOverlay = document.getElementById('loading-overlay');
 // Event listener for add meeting button
 addDepartmentBtn.addEventListener('click', () => gotToAddEditApartmentPage(null));
+manualBtn.addEventListener('click', () => openUserManual());
 
 // This function will get current session username
 const getSessionInfo = async () => {
@@ -186,9 +188,14 @@ const gotToAddEditApartmentPage = (apartment) => {
     window.location.href = 'addEditApartment.html'; // Navigate to add/edit department
 }
 
+// This function will open the user manual in a new tab
+const openUserManual = () => {
+    window.open('assets/manual/Manual-Apartamentos.pdf');
+}
+
 /**
  * Function that will handle alert delete meeting
- * @param {object} apartment 
+ * @param {object} apartment
  */
 const alertDelete = (apartment) => {
     const meetingHtml = generateApartmentHtml(apartment); // Generate meeting data html to display on sweet alert
