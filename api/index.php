@@ -2,11 +2,19 @@
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
-header("Access-Control-Allow-Methods: *");
+header("Access-Control-Allow-Methods: GET, POST, DELETE");
 
 include 'functions.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+if ($method === 'OPTIONS') {
+    header("Access-Control-Allow-Methods: GET, POST, DELETE");
+    header("Access-Control-Allow-Headers: Content-Type");
+    header("Access-Control-Max-Age: 86400");
+    exit;
+}
+
 
 switch ($method) {
 
@@ -53,6 +61,18 @@ switch ($method) {
             case 'update_apartment':
                 $apartment = json_decode($_POST['apartment'], true);
                 $response = updateApartment($apartment);
+                break;
+            case 'delete_apartment':
+                $apartment_id = isset($_POST['apartment_id']) ? $_POST['apartment_id'] : '';
+                if ($apartment_id || $apartment_id == 0) {
+                    $response = deleteApartment($apartment_id);
+                } else {
+                    $response = [
+                        'status' => 'error',
+                        'message' => 'É necessário o id do apartamento.',
+                        'title' => 'ID em falta.'
+                    ];
+                }
                 break;
         }
 

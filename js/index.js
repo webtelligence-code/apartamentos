@@ -1,5 +1,6 @@
 let sessionUsername;
 let sessionDepartment;
+const API_URL = 'https://amatoscar.pt/GAP/NovasPlataformas/_API/apartamentos/index.php';
 // Meetings array
 const apartments = [];
 // Grab the add meeting button id
@@ -18,7 +19,7 @@ const getSessionInfo = async () => {
     loadingOverlay.style.display = 'block'; // Show loading overlay
 
     // To fetch session username
-    $.get('api/index.php?action=get_username', (data, status) => {
+    $.get(`${API_URL}?action=get_username`, (data, status) => {
         if (status === 'success') {
             // API call success
             const parsedData = JSON.parse(data)
@@ -31,8 +32,8 @@ const getSessionInfo = async () => {
     })
 
     // To fetch Department
-    $.get('api/index.php?action=get_department', (data, status) => {
-        if(status === 'success') {
+    $.get(`${API_URL}?action=get_department`, (data, status) => {
+        if (status === 'success') {
             // API call success
             const parsedData = JSON.parse(data);
             console.log('DEPARTMENT =>', parsedData);
@@ -45,11 +46,11 @@ getSessionInfo(); // Grab the current session USERNAME/DEPARTAMENTO via ajax cal
 
 // Function to call api to fetch all meetings
 const getApartments = () => {
-    $.get('api/index.php?action=get_apartments', (data, status) => {
+    $.get(`${API_URL}?action=get_apartments`, (data, status) => {
         if (status === 'success') {
-            // Api call success       
-            console.log(data) // Log result
+            // Api call success
             const parsedData = JSON.parse(data); // Parse json data
+            console.log(parsedData) // Log result
             parsedData.forEach(apartment => {
                 apartments.push(apartment); // Push parsed department data to meetings array
             });
@@ -167,7 +168,7 @@ const popupSweetAlert = (guests) => {
         showCancelButton: false,
         confirmButtonText: 'Ok',
     }).then((result) => {
-        
+
     });
 }
 
@@ -252,11 +253,11 @@ const deleteApartment = (apartment) => {
     return new Promise((resolve, reject) => {
         // Handle API logic here
         $.ajax({
-            url: 'api/index.php',
-            type: 'DELETE',
+            url: API_URL,
+            type: 'POST',
             data: {
                 action: 'delete_apartment',
-                apartment_id: apartment.id
+                apartment_id: apartment.id,
             },
             success: (response) => {
                 // Resolve the Promise with the response data

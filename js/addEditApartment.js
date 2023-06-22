@@ -1,3 +1,6 @@
+
+const API_URL = 'https://amatoscar.pt/GAP/NovasPlataformas/_API/apartamentos/index.php';
+
 // Grab all DOM id elems
 const selectedApartment = JSON.parse(localStorage.getItem('selectedApartment'));
 
@@ -56,9 +59,10 @@ const handleDOMFormData = () => {
 
 // Function that will call api to fetch all users from database
 const getUsers = async () => {
-    $.get('api/index.php?action=get_users', (data, status) => {
+    $.get(`${API_URL}?action=get_users`, (data, status) => {
         if (status === 'success') {
             const parsedData = JSON.parse(data);
+            console.log(parsedData)
             populateUsers(parsedData);
         } else {
             console.log('Failed to fetch guests from api')
@@ -162,7 +166,7 @@ const submitApartment = async (e) => {
  * @returns response data
  */
 const checkApartmentConflict = async (apartment_id, start_date, end_date, check_in, check_out) => {
-    const response = await $.get('api/index.php', {
+    const response = await $.get(API_URL, {
         action: 'check_apartment_conflict',
         apartment_id,
         start_date,
@@ -180,7 +184,7 @@ const updateApartment = async (apartment) => {
     console.log(apartment);
     apartment = JSON.stringify(apartment);
     $.ajax({
-        url: 'api/index.php',
+        url: API_URL,
         type: 'POST',
         data: {
             action: 'update_apartment',
@@ -202,7 +206,7 @@ const addApartment = async (apartment) => {
     console.log(apartment);
     apartment = JSON.stringify(apartment);
     $.ajax({
-        url: 'api/index.php',
+        url: API_URL,
         type: 'POST',
         data: {
             action: 'add_apartment',
