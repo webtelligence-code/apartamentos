@@ -47,7 +47,8 @@ function getApartments()
             $stmt->execute();
             $guestsResult = $stmt->get_result();
 
-            $guests = array();
+            $guests = array();  // Reset the $guests array for each apartment
+
             while ($guestRow = $guestsResult->fetch_assoc()) {
                 $guests[] = $guestRow['name'];
             }
@@ -67,7 +68,7 @@ function getApartments()
 function getUsers()
 {
     global $conn;
-    $sql = 'SELECT * FROM users WHERE ACT = 1 AND COLABORADOR = 1 ORDER BY NAME ASC';
+    $sql = 'SELECT * FROM tbusers WHERE ativo = 1 AND colaborador = 1 ORDER BY nameDisplay ASC';
     $result = $conn->query($sql);
 
     $users = array();
@@ -124,6 +125,47 @@ function checkApartmentConflict($apartment_id, $start_date, $end_date, $check_in
     return count($apartments) > 0;
 }
 
+function addApartment($apartment)
+{
+    global $conn;
+
+    $name = mysqli_real_escape_string($conn, $apartment['name']);
+    $start_date = mysqli_real_escape_string($conn, $apartment['start_date']);
+    $end_date = mysqli_real_escape_string($conn, $apartment['end_date']);
+    $check_in = mysqli_real_escape_string($conn, $apartment['check_in']);
+    $check_out = mysqli_real_escape_string($conn, $apartment['check_out']);
+    $host = mysqli_real_escape_string($conn, $apartment['host']);
+    $key_host = mysqli_real_escape_string($conn, $apartment['key_host']);
+
+    $apartmentSql = "INSERT INTO tb_apartamentos (name, start_date, end_date, check_in, check_out, host, key_host)
+                     VALUES ('$name', '$start_date', '$end_date', '$check_in', '$check_out', '$host', '$key_host')";
+
+    if (!mysqli_query($conn, $apartmentSql)) {
+        throw new Exception('Error: ' . mysqli_error($conn));
+    }
+
+    $apartment_id = mysqli_insert_id($conn);
+
+    $guestsSql = "INSERT INTO tb_apartamentos_visitas (apartment_id, name) VALUES ";
+
+    foreach ($apartment['guests'] as $guest) {
+        $guest = mysqli_real_escape_string($conn, $guest);
+        $guestsSql .= "($apartment_id, '$guest'),";
+    }
+
+    $guestsSql = rtrim($guestsSql, ','); // Remove the trailing comma
+
+    if (!mysqli_query($conn, $guestsSql)) {
+        throw new Exception('Error: ' . mysqli_error($conn));
+    }
+
+    return [
+        'status' => 'success',
+        'message' => 'Apartamento adicionado com sucesso!',
+        'title' => 'Sucesso!'
+    ];
+}
+
 
 /**
  * Function that will handle inserting a new apartment into the database
@@ -142,9 +184,10 @@ function updateApartment($apartment)
     $check_in = mysqli_real_escape_string($conn, $apartment['check_in']);
     $check_out = mysqli_real_escape_string($conn, $apartment['check_out']);
     $host = mysqli_real_escape_string($conn, $apartment['host']);
+    $key_host = mysqli_real_escape_string($conn, $apartment['key_host']);
 
     $apartmentSql = "UPDATE tb_apartamentos 
-                     SET name = '$name', start_date = '$start_date', end_date = '$end_date', check_in = '$check_in', check_out = '$check_out', host = '$host'
+                     SET name = '$name', start_date = '$start_date', end_date = '$end_date', check_in = '$check_in', check_out = '$check_out', host = '$host', key_host = '$key_host'
                      WHERE id = $apartment_id";
 
     if (!mysqli_query($conn, $apartmentSql)) {

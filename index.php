@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Apartamentos agendados</title>
+    <script src="https://kit.fontawesome.com/dad0134376.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/index.css">
 </head>
@@ -21,8 +22,8 @@
 
         <div class="row text-center">
             <div class="col">
-                <button class="add-apartment-btn" id="add-apartment-btn">Adicionar apartamento</button>
-                <button class="manual-btn" id="manual-btn">Manual de utilizador</button>
+                <button class="add-apartment-btn" id="add-apartment-btn"><i class="fas fa-plus me-2"></i>Reservar apartamento</button>
+                <button class="manual-btn" id="manual-btn"><i class="fas fa-book-reader me-2"></i>Manual de utilizador</button>
             </div>
         </div>
     </header>
@@ -125,34 +126,32 @@
 
                     // If true, show edit/delete buttons
                     const editDeleteButtons = showEditDeleteButtons ? `
-                <div class='col-sm-12 mt-3'>
-                    <button id='edit-apartment-${index}' class='btn btn-primary'>Editar</button>
-                    <button id='delete-apartment-${index}' class='btn btn-danger'>Remover</button>
+                <div class='col-sm-3 text-center'>
+                    <button id='edit-apartment-${index}' class='btn btn-primary p-0 mb-2' style='width: 125px; background-color: #ed6337; border: none'><i class="fas fa-edit me-2"></i>Editar</button><br/>
+                    <button id='delete-apartment-${index}' class='btn btn-danger p-0' style='width: 125px; border: none'><i class="fas fa-trash me-2"></i>Remover</button>
                 </div>
             ` : '';
 
                     // Populate row inner HTML
                     divRow.innerHTML = `
-                <div class='card my-3 c-card'>
+                <div class='card c-card'>
                     <div class='row g-0 align-items-center'>
-                        <div class='col-sm-12 col-md-4 text-center text-md-start'>
-                            <img src='assets/img/building.webp' class='img-fluid rounded meeting-image' alt='apartment logo' />
+                        <div class='col-sm-12 col-md-2 text-center text-md-center' >
+                            <img src='assets/img/building.webp' class='img-fluid rounded meeting-image' style='height: 50px' alt='apartment logo' /><br/>
+                            <span class='text-center' style='color: #ed6337; font-size: 18px'>${apartment.name}</span>
                         </div>
-                        <div class='col-sm-12 col-md-8 text-center text-md-start'>
+                        <div class='col-sm-12 col-md-10 text-center text-md-start'>
                             <div class='card-body'>
                                 <div class='row align-items-center'>
-                                    <div class='col-sm-12 col-md'>
-                                        <h3 class='card-title' style='color: #ed6337'>${apartment.name}</h3>
-                                        <p class='card-text'><strong>Data Check In: </strong>${formattedStartDate}</p>
-                                        <p class='card-text'><strong>Data Check Out: </strong>${formattedEndDate}</p>
-                                        <p class='card-text'><strong>Hora Check In: </strong>${formattedCheckIn}h</p>
-                                        <p class='card-text'><strong>Hora Check Out: </strong>${formattedCheckOut}h</p>
-                                        <p class='card-text'><strong>Responsável da chave:</strong> ${apartment.key_host}</p>
-                                        <p class='card-text'>
-                                            <button type='button' class='btn btn-primary' id='btn-guests-${index}'>
-                                                Convidados <span class='badge badge-warning'>${apartment.a_guests.length}</span>
-                                            </button>
-                                        </p>
+                                    <div class='col-sm-5 col-md-5'>
+                                        <p class='card-text'><strong>Data Check In: </strong>${formattedStartDate} - <strong>Hora Check In: </strong>${formattedCheckIn}h</p>
+                                        <p class='card-text'><strong>Data Check Out: </strong>${formattedEndDate} - <strong>Hora Check Out: </strong>${formattedCheckOut}h</p>
+                                    </div>
+                                    <div class='col-sm-4 text-center col-md-4'>
+                                        <button type='button' class='btn btn-primary py-0 mb-2' id='btn-guests-${index}'>
+                                            Convidados <span class='badge badge-warning'>${apartment.a_guests.length}</span>
+                                        </button><br/>
+                                        <strong class='ms-2'>Responsável da chave:</strong> ${apartment.key_host}
                                     </div>
                                     ${editDeleteButtons}
                                 </div>

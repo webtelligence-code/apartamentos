@@ -104,9 +104,9 @@
         const handleDOMFormData = () => {
             setMinimumDate();
 
-            let labelText = 'Adicionar apartamento';
+            let labelText = 'Reservar apartamento';
             if (selectedApartment) {
-                labelText = 'Editar apartamento';
+                labelText = 'Editar reserva';
             }
             document.title = labelText
             formTitle.innerText = labelText
@@ -147,13 +147,13 @@
             console.log(users);
             users.map((user) => {
                 var option1 = document.createElement('option');
-                option1.innerText = user.NAME;
-                option1.value = user.NAME;
+                option1.innerText = user.nameDisplay;
+                option1.value = user.nameDisplay;
 
                 // Check if the user is in the selectedGuests array and set the selected attribute
                 if (selectedApartment) {
                     const trimmedParticipants = selectedApartment.a_guests.map(guest => guest.trim());
-                    if (trimmedParticipants.includes(user.NAME.trim())) {
+                    if (trimmedParticipants.includes(user.nameDisplay.trim())) {
                         option1.selected = true; // Set guests default value
                     }
                 }
@@ -161,8 +161,8 @@
                 guestsSelect.appendChild(option1) // Append option to select
 
                 var option2 = document.createElement('option');
-                option2.innerText = user.NAME;
-                option2.value = user.NAME;
+                option2.innerText = user.nameDisplay;
+                option2.value = user.nameDisplay;
 
                 keyHostSelect.appendChild(option2);
             });
