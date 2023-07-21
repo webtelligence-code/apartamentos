@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Departamento</title>
     <!-- Add your CSS and other necessary files -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/css/select2.min.css">
     <link rel="stylesheet" href="assets/css/select2-bootstrap-5-theme.min.css">
@@ -23,18 +28,6 @@
                 <label style="font-weight: 600;" for="motivo" class="form-label">Nome apartamento:</label>
                 <input class="form-control c-input" type="text" id="name" name="name" value="Apartamento Lisboa" required disabled>
 
-                <label style="font-weight: 600;" for="start_date" class="form-label">Data check in:</label>
-                <input class="form-control c-input" type="date" id="start_date" name="start_date" required>
-
-                <label style="font-weight: 600;" for="end_date" class="form-label">Data check out:</label>
-                <input class="form-control c-input" type="date" id="end_date" name="end_date" required>
-
-                <label style="font-weight: 600;" for="check_in" class="form-label">Hora check in:</label>
-                <input class="form-control c-input" type="time" id="check_in" name="check_in" step="1800" required>
-
-                <label style="font-weight: 600;" for="check_out" class="form-label">Hora check out:</label>
-                <input class="form-control c-input" type="time" id="check_out" name="check_out" step="1800" required>
-
                 <label style="font-weight: 600;" for="guests" class="form-label">Convidados:</label>
                 <select class="custom-select2" id="guests" data-placeholder="Selecione os convidados" required multiple>
                 </select>
@@ -44,13 +37,25 @@
                     <option selected>Selecione o responsável da chave:</option>
                 </select>
 
+                <label style="font-weight: 600;" for="start_date" class="form-label">Data check in:</label>
+                <input class="form-control c-input" type="text" id="start_date" name="start_date" required>
+
+                <label style="font-weight: 600;" for="end_date" class="form-label">Data check out:</label>
+                <input class="form-control c-input" type="text" id="end_date" name="end_date" required>
+
+                <label style="font-weight: 600;" for="check_in" class="form-label">Hora check in:</label>
+                <input class="form-control c-input" type="text" id="check_in" name="check_in" required>
+
+                <label style="font-weight: 600;" for="check_out" class="form-label">Hora check out:</label>
+                <input class="form-control c-input" type="text" id="check_out" name="check_out" required>
+
                 <button type="submit" id="add-edit-apartment-btn" class="add-edit-apartment-btn mt-3"></button>
                 <button type="button" id="cancel-btn" class="cancel-btn ms-2 mt-3">Cancelar</button>
             </form>
         </div>
     </div>
 
-    <script src="assets/js/jquery-3.6.4.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"></script>
     <script src="assets/bootstrap/css/bootstrap.min.css"></script>
     <script src="assets/bootstrap/js/bootstrap.bundle.js"></script>
     <script src="assets/js/select2.min.js"></script>
@@ -71,38 +76,63 @@
         const addEditApartmentBtn = document.getElementById('add-edit-apartment-btn');
         const cancelBtn = document.getElementById('cancel-btn');
 
-        console.log(host)
-
-        // This function will set the minimum date available in the date inputs
-        const setMinimumDate = () => {
-            const startDateInput = document.getElementById('start_date');
-            const endDateInput = document.getElementById('end_date');
-
-            const today = new Date();
-            today.setDate(today.getDate() + 1) // Allow starting tomorrow
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1); // Allow starting the day before tomorrow
-
-            const startMinDate = today.toLocaleDateString('en-CA', {
-                timeZone: 'Europe/Lisbon',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
+        $(function() {
+            $('input[name="start_date"]').daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                minYear: parseInt(moment().format('YYYY'), 10),
+                maxYear: parseInt(moment().format('YYYY'), 10),
+                minDate: moment().startOf('day').add(1, 'days'), // setMinDate
+                locale: {
+                    format: 'DD-MM-YYYY' // Set the desired date format
+                }
             });
-            const endMinDate = tomorrow.toLocaleDateString('en-CA', {
-                timeZone: 'Europe/Lisbon',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            });
+        });
 
-            startDateInput.setAttribute('min', startMinDate);
-            endDateInput.setAttribute('min', endMinDate);
+        $(function() {
+            $('input[name="end_date"]').daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                minYear: parseInt(moment().format('YYYY'), 10),
+                maxYear: parseInt(moment().format('YYYY'), 10),
+                minDate: moment().startOf('day').add(2, 'days'), // setMinDate
+                locale: {
+                    format: 'DD-MM-YYYY' // Set the desired date format
+                }
+            });
+        });
+
+        const setCheckInTime = () => {
+            $('input[name="check_in"]').timepicker({
+                timeFormat: 'HH:mm',
+                interval: 30,
+                defaultTime: '8',
+                minTime: '8',
+                maxTime: '12',
+                dynamic: false,
+                dropdown: true,
+                scrollbar: true,
+            });
+        }
+
+        const setCheckOutTime = () => {
+            $('input[name="check_out"]').timepicker({
+                timeFormat: 'HH:mm',
+                interval: 30,
+                defaultTime: '8',
+                startTime: '8:00',
+                minTime: '8',
+                maxTime: '12',
+                dynamic: false,
+                dropdown: true,
+                scrollbar: true,
+            });
         }
 
         // Function that will populate the form data inputs
         const handleDOMFormData = () => {
-            setMinimumDate();
+            setCheckInTime();
+            setCheckOutTime()
 
             let labelText = 'Reservar apartamento';
             if (selectedApartment) {
